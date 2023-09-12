@@ -295,7 +295,7 @@ module ex_stage import ariane_pkg::*; #(
             // No exceptions arising from the pau
             assign pau_exception_o.valid = 1'b0;
 
-            pau_top pau_top_i (
+            pau_wrap pau_i (
                 .clk_i,
                 .rst_ni,
                 .fu_data_i        ( pau_data       ),

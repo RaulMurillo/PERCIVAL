@@ -187,7 +187,7 @@ package ariane_pkg;
     // Posit unit
     localparam bit POS_PRESENT = riscv::PAU_EN;
     localparam POSLEN = 64;
-    localparam QUIRELEN = 16 * POSLEN;
+    // localparam QUIRELEN = 16 * POSLEN;
     localparam bit QUIRE_PRESENT = 1'b1;
     localparam bit POS_LOG_MULT = 1'b0;
     localparam bit POS_LOG_DIV = 1'b0;

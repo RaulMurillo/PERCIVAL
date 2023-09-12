@@ -12,16 +12,35 @@
 // Author: David Mallasén <dmallase@ucm.es>
 // Date: 04.12.2021
 // Description: Posit Arithmetic Unit top-level module
+//
+// Additional contributions by: Raul Murillo <ramuri01@ucm.es>
+// Date: 11.09.2023
 
-module pau_top import ariane_pkg::*; (
-    input  logic                     clk_i,          // Clock
-    input  logic                     rst_ni,         // Asynchronous reset active low
-    input  fu_data_t                 fu_data_i,
-    input  logic                     pau_valid_i,
-    output logic                     pau_ready_o,
-    output logic [TRANS_ID_BITS-1:0] pau_trans_id_o,
-    output logic                     pau_valid_o,
-    output riscv::xlen_t             result_o
+module pau_top #(
+  // PAU configuration
+  parameter pau_pkg::pau_features_t Features      = pau_pkg::RV64,
+  parameter type                    TagType       = logic,
+  // Do not change
+  localparam int unsigned           WIDTH         = Features.Width,
+  localparam int unsigned           POSLEN        = Features.PositLength,
+  localparam int unsigned           NUM_OPERANDS  = 2,
+  localparam bit                    POS_PRESENT   = Features.EnablePAU,
+  localparam bit                    POS_LOG_MULT  = Features.EnableApproxMult,
+  localparam bit                    POS_LOG_DIV   = Features.EnableApproxDiv,
+  localparam bit                    POS_LOG_SQRT  = Features.EnableApproxSqrt,
+  localparam bit                    QUIRE_PRESENT = Features.EnableQuire,
+  localparam int unsigned           QUIRELEN      = 16 * Features.PositLength
+) (
+    input  logic                               clk_i,          // Clock
+    input  logic                               rst_ni,         // Asynchronous reset active low
+    input  logic [NUM_OPERANDS-1:0][WIDTH-1:0] operands_i,
+    input  pau_pkg::operation_e                op_i,
+    input  TagType                             pau_trans_id_i,
+    input  logic                               pau_valid_i,
+    output logic                               pau_ready_o,
+    output TagType                             pau_trans_id_o,
+    output logic                               pau_valid_o,
+    output logic [WIDTH-1:0]                   result_o
 );
     // This is a workaround. See fpu_wrap.sv
     // Otherwise compilation might issue an error if POSLEN=0
@@ -48,16 +67,16 @@ module pau_top import ariane_pkg::*; (
 
         logic pau_valid_d;
 
-        logic [TRANS_ID_BITS-1:0] trans_id_d, trans_id_q;
+        TagType trans_id_d, trans_id_q;
 
-        riscv::xlen_t operand_a, operand_a_d, operand_a_q;
-        riscv::xlen_t operand_b, operand_b_d, operand_b_q;
+        logic [WIDTH-1:0] operand_a, operand_a_d, operand_a_q;
+        logic [WIDTH-1:0] operand_b, operand_b_d, operand_b_q;
 
-        fu_op operator, operator_d, operator_q, operator_delay;
+        pau_pkg::operation_e operator, operator_d, operator_q, operator_delay;
         
-        assign operand_a_d = fu_data_i.operand_a;
-        assign operand_b_d = fu_data_i.operand_b;
-        assign operator_d  = fu_data_i.operator;
+        assign operand_a_d = operands_i[0];
+        assign operand_b_d = operands_i[1];
+        assign operator_d  = op_i;
 
         assign pau_trans_id_o = trans_id_q;
 
@@ -515,7 +534,7 @@ module pau_top import ariane_pkg::*; (
                 // Default state, ready for instructions
                 READY: begin
                     pau_ready_o  = 1'b1;        // Act as if PAU ready
-                    trans_id_d = fu_data_i.trans_id;
+                    trans_id_d = pau_trans_id_i;
 
                     if (pau_valid_i) begin
                         if (latency_d > 0) begin
