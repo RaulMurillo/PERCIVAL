@@ -288,14 +288,13 @@ module ex_stage import ariane_pkg::*; #(
     generate
         if (POS_PRESENT) begin : pau_gen
             fu_data_t pau_data;
-            logic [POSLEN-1:0] pau_result;
 
             assign pau_data = pau_valid_i ? fu_data_i : '0;
 
             // No exceptions arising from the pau
             assign pau_exception_o.valid = 1'b0;
 
-            pau_wrap pau_i (
+            pau_ariane_wrapper pau_i (
                 .clk_i,
                 .rst_ni,
                 .fu_data_i        ( pau_data       ),

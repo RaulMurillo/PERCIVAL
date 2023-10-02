@@ -13,7 +13,7 @@ package pau_pkg;
   // --------------
   // PAU OPERATIONS
   // --------------
-  localparam int unsigned OP_BITS = 4;
+  localparam int unsigned OP_BITS = 5;
 
   typedef enum logic [OP_BITS-1:0] {
     PADD, PSUB, PMUL, PDIV, PSQRT,     // Computational Instructions
@@ -22,8 +22,10 @@ package pau_pkg;
     PSGNJ, PSGNJN, PSGNJX, PMV_P2X, PMV_X2P  // Move Instructions
   } operation_e;
 
+  localparam logic DONT_CARE = 1'b1; // the value to assign as don't care
+
   // ------------------
-  // FPU configuration
+  // PAU configuration
   // ------------------
 
   // PAU configuration: features
@@ -43,6 +45,7 @@ package pau_pkg;
 
   localparam pau_features_t RV64 = '{
     Width:             64,
+    PositLength:       64,
     EnablePAU:         1'b1,
     EnableQuire:       1'b1,
     EnableApproxMult:  1'b0,
@@ -50,8 +53,9 @@ package pau_pkg;
     EnableApproxSqrt:  1'b0
   };
 
-  localparam fpu_features_t RV32 = '{
+  localparam pau_features_t RV32 = '{
     Width:             32,
+    PositLength:       32,
     EnablePAU:         1'b1,
     EnableQuire:       1'b1,
     EnableApproxMult:  1'b0,

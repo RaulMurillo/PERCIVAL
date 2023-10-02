@@ -15,7 +15,7 @@
 
 module pau_ariane_wrapper 
 import ariane_pkg::*;
-// import pau_pkg::*;
+import pau_pkg::*;
 (
     input  logic                     clk_i,          // Clock
     input  logic                     rst_ni,         // Asynchronous reset active low
@@ -58,9 +58,9 @@ import ariane_pkg::*;
     always_comb begin : input_translation
         // Default Values
         pau_operands[0]  = fu_data_i.operand_a;
-        pau_operands[0]  = fu_data_i.operand_b;
-
-        pau_tag = fu_data_i.trans_id;
+        pau_operands[1]  = fu_data_i.operand_b;
+        pau_op           = pau_pkg::PSGNJ; // sign injection by default
+        pau_tag          = fu_data_i.trans_id;
         
         // Operations
         unique case (fu_data_i.operator)
@@ -121,7 +121,9 @@ import ariane_pkg::*;
             ariane_pkg::PMV_X2P: begin  
                 pau_op = pau_pkg::PMV_X2P;
             end
-            default: ; // default case to suppress unique warning
+            default: begin // default case to suppress unique warning
+                pau_op     = operation_e'('1); // don't care
+            end
         endcase
 
         if (ariane_pkg::QUIRE_PRESENT) begin

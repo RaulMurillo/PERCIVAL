@@ -16,20 +16,22 @@
 // Additional contributions by: Raul Murillo <ramuri01@ucm.es>
 // Date: 11.09.2023
 
-module pau_top #(
+module pau_top 
+import pau_pkg::*;
+#(
   // PAU configuration
   parameter pau_pkg::pau_features_t Features      = pau_pkg::RV64,
   parameter type                    TagType       = logic,
   // Do not change
   localparam int unsigned           WIDTH         = Features.Width,
   localparam int unsigned           POSLEN        = Features.PositLength,
-  localparam int unsigned           NUM_OPERANDS  = 2,
   localparam bit                    POS_PRESENT   = Features.EnablePAU,
   localparam bit                    POS_LOG_MULT  = Features.EnableApproxMult,
   localparam bit                    POS_LOG_DIV   = Features.EnableApproxDiv,
   localparam bit                    POS_LOG_SQRT  = Features.EnableApproxSqrt,
   localparam bit                    QUIRE_PRESENT = Features.EnableQuire,
-  localparam int unsigned           QUIRELEN      = 16 * Features.PositLength
+  localparam int unsigned           QUIRELEN      = 16 * Features.PositLength,
+  localparam int unsigned           NUM_OPERANDS  = 2
 ) (
     input  logic                               clk_i,          // Clock
     input  logic                               rst_ni,         // Asynchronous reset active low
@@ -467,19 +469,20 @@ module pau_top #(
 
             unique case (operator)
                 PSGNJ: begin
-                    if (fu_data_i.operand_a[POSLEN-1] != fu_data_i.operand_b[POSLEN-1])
+                    if (operand_a[POSLEN-1] != operand_b[POSLEN-1])
                         move_flip = 1'b1;
                 end
                 PSGNJN: begin
-                    if (fu_data_i.operand_a[POSLEN-1] == fu_data_i.operand_b[POSLEN-1])
+                    if (operand_a[POSLEN-1] == operand_b[POSLEN-1])
                         move_flip = 1'b1;
                 end
                 PSGNJX: begin
-                    if (fu_data_i.operand_b[POSLEN-1]) // sgn(a) ^ sgn(b) != sgn(a) <=> sgn(b)
+                    if (operand_b[POSLEN-1]) // sgn(a) ^ sgn(b) != sgn(a) <=> sgn(b)
                         move_flip = 1'b1;
                 end
                 PMV_P2X,
-                PMV_X2P: pmv_d = operand_a;
+                PMV_X2P: begin pmv_d = operand_a;
+                end
                 default: ; // default case to suppress unique warning
             endcase
         end
@@ -491,27 +494,27 @@ module pau_top #(
             result_o   = '0;
 
             unique case (operator_delay)
-                PADD, PSUB:     result_o = {{riscv::XLEN-POSLEN{1'b0}}, add_o};
-                PMUL:           result_o = {{riscv::XLEN-POSLEN{1'b0}}, mul_o};
-                PDIV:           result_o = {{riscv::XLEN-POSLEN{1'b0}}, div_o};
-                PSQRT:          result_o = {{riscv::XLEN-POSLEN{1'b0}}, sqrt_o};
-                QROUND:         result_o = {{riscv::XLEN-POSLEN{1'b0}}, conv_q2p_o};
+                PADD, PSUB:     result_o = {{WIDTH-POSLEN{1'b0}}, add_o};
+                PMUL:           result_o = {{WIDTH-POSLEN{1'b0}}, mul_o};
+                PDIV:           result_o = {{WIDTH-POSLEN{1'b0}}, div_o};
+                PSQRT:          result_o = {{WIDTH-POSLEN{1'b0}}, sqrt_o};
+                QROUND:         result_o = {{WIDTH-POSLEN{1'b0}}, conv_q2p_o};
 
-                PCVT_P2I:       result_o = {{riscv::XLEN-32{conv_p2i_o[31]}}, conv_p2i_q};
-                PCVT_P2U:       result_o = {{riscv::XLEN-32{conv_p2u_o[31]}}, conv_p2u_q};
+                PCVT_P2I:       result_o = {{WIDTH-32{conv_p2i_o[31]}}, conv_p2i_q};
+                PCVT_P2U:       result_o = {{WIDTH-32{conv_p2u_o[31]}}, conv_p2u_q};
                 PCVT_P2L:       result_o = conv_p2l_q;
                 PCVT_P2LU:      result_o = conv_p2lu_q;
-                PCVT_I2P:       result_o = {{riscv::XLEN-POSLEN{1'b0}}, conv_i2p_q};
-                PCVT_U2P:       result_o = {{riscv::XLEN-POSLEN{1'b0}}, conv_u2p_q};
-                PCVT_L2P:       result_o = {{riscv::XLEN-POSLEN{1'b0}}, conv_l2p_q};
-                PCVT_LU2P:      result_o = {{riscv::XLEN-POSLEN{1'b0}}, conv_lu2p_q};
+                PCVT_I2P:       result_o = {{WIDTH-POSLEN{1'b0}}, conv_i2p_q};
+                PCVT_U2P:       result_o = {{WIDTH-POSLEN{1'b0}}, conv_u2p_q};
+                PCVT_L2P:       result_o = {{WIDTH-POSLEN{1'b0}}, conv_l2p_q};
+                PCVT_LU2P:      result_o = {{WIDTH-POSLEN{1'b0}}, conv_lu2p_q};
 
                 PSGNJ,
                 PSGNJN,
-                PSGNJX:         result_o = {{riscv::XLEN-POSLEN{1'b0}}, sgnj_o};
+                PSGNJX:         result_o = {{WIDTH-POSLEN{1'b0}}, sgnj_o};
 
                 PMV_P2X,
-                PMV_X2P:        result_o = {{riscv::XLEN-POSLEN{pmv_o[POSLEN - 1]}}, pmv_o};
+                PMV_X2P:        result_o = {{WIDTH-POSLEN{pmv_o[POSLEN - 1]}}, pmv_o};
                 default: ; // default case to suppress unique warning
             endcase
         end

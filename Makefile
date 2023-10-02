@@ -86,9 +86,9 @@ target     ?= percival_imafdcxposit_sv39
 
 # Sources
 # Package files -> compile first
-ariane_pkg := core/include/$(target)_config_pkg.sv                   \
-              core/include/pau_pkg.sv
+ariane_pkg := core/include/$(target)_config_pkg.sv
 ariane_pkg += core/include/riscv_pkg.sv                              \
+              core/include/pau_pkg.sv                                \
               corev_apu/riscv-dbg/src/dm_pkg.sv                      \
               core/include/ariane_pkg.sv                             \
               core/include/ariane_rvfi_pkg.sv                        \
